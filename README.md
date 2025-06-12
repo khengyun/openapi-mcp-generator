@@ -24,7 +24,7 @@ The generator has been refactored into a proper Python package while maintaining
 You can use the tool in whatever way you prefer:
 1. Run `generator.py` directly (original approach)
 2. Install as a package and use `mcp-generator` command
-3. Use the module programmatically in your own Python code
+3. Use the runtime module programmatically in your own Python code
 
 For more details on the modular code structure, see [MODULAR_REFACTORING.md](MODULAR_REFACTORING.md).
 
@@ -72,25 +72,25 @@ pip install openapi-mcp-generator
 ## Usage
 
 ```bash
-# Using the original script (still works the same way)
+# Run a dynamic MCP server directly from an OpenAPI spec
+python -m swagger_mcp.cli openapi.yaml --api-url https://api.example.com
+
+# Generate a static project if needed
 python generator.py openapi.yaml --output-dir ./output --api-url https://api.example.com
-
-# Using the new modular CLI tool after installation
-mcp-generator openapi.yaml --output-dir ./output --api-url https://api.example.com
-
-# Using the python module directly
-python -m openapi_mcp_generator.cli openapi.yaml --output-dir ./output
 ```
 
 ### Command Line Options
 
-- `openapi_file`: Path to the OpenAPI YAML file (required)
-- `--output-dir`: Output directory for the generated project (default: '.')
+- `openapi_spec`: Path or URL to the OpenAPI specification
 - `--api-url`: Base URL for the API
 - `--auth-type`: Authentication type (bearer, token, basic)
 - `--api-token`: API token for authentication
 - `--api-username`: Username for basic authentication
 - `--api-password`: Password for basic authentication
+- `--include-pattern`: Only include operations matching this regex
+- `--exclude-pattern`: Exclude operations matching this regex
+- `--header`: Additional header `KEY=VALUE` (repeatable)
+- `--const`: Constant query parameter `KEY=VALUE` (repeatable)
 
 ## Running the Generated Server
 
@@ -131,6 +131,10 @@ openapi-mcp-generator/
 │   ├── http.py               # HTTP client utilities
 │   ├── parser.py             # OpenAPI parser
 │   └── project.py            # Project builder
+├── swagger_mcp/             # Runtime server package
+│   ├── __init__.py
+│   ├── cli.py
+│   └── runtime.py
 ├── templates/                # Original templates directory (used by the modular code)
 │   ├── config/
 │   ├── docker/
@@ -201,7 +205,8 @@ mcp-generator samples/TriliumNext/etapi.openapi.yaml
 Or use it programmatically in your own Python code:
 
 ```python
-from openapi_mcp_generator import generator
+from swagger_mcp.runtime import create_mcp_server
 
-generator.generate('samples/TriliumNext/etapi.openapi.yaml')
+mcp = create_mcp_server('samples/TriliumNext/etapi.openapi.yaml')
+mcp.run()
 ```
